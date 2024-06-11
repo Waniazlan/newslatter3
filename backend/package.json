@@ -1,0 +1,23 @@
+{
+  "name": "gosttesting",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@getbrevo/brevo": "^2.1.1",
+    "@tryghost/content-api": "^1.11.21",
+    "axios": "^1.7.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "sendinblue-api": "^1.0.8",
+    "sib-api-v3-sdk": "^8.5.0"
+  }
+}

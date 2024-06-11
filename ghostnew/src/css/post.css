@@ -1,0 +1,12 @@
+.post-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Four columns */
+    gap: 20px; /* Gap between items */
+  }
+  
+  .post-item {
+    border: 1px solid #ccc;
+    padding: 20px;
+    margin-top:10px;
+  }
+  
