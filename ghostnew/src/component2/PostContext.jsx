@@ -4,8 +4,11 @@ import axios from 'axios';
 const PostsContext = createContext();
 
 const PostsProvider = ({ children }) => {
+  
     const [posts, setPosts] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+
+   
  
 
     useEffect(() => {
@@ -25,7 +28,10 @@ const PostsProvider = ({ children }) => {
       );
       
 //.....................fetching post from GHOST................
- 
+
+
+
+
 
   return (
     <PostsContext.Provider value={{ filteredPosts, searchQuery, setSearchQuery}}>

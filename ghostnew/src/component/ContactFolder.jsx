@@ -1,62 +1,63 @@
-import React, { useState} from 'react';
+import React, { useContext, useState} from 'react';
 import axios from 'axios';
+import { PostsContext } from '../component2/PostContext';
 
 
 function ContactFolders() {
-  const [folderId, setFolderId] = useState('');
-  const [contacts,setContacts] = useState([])
-  const [selectedContacts, setSelectedContacts] = useState([]);
-  const [selectAll, setSelectAll] = useState(false)
+   const [folderId, setFolderId] = useState('');
+   const [FolderContacts,setFolderContacts] = useState([])
+   const [selectedContacts, setSelectedContacts] = useState([]);
+   const [selectAll, setSelectAll] = useState(false)
 
-  const handleInputChange = (e) => {
-    setFolderId(e.target.value);
-  };
+   const handleInputChange = (e) => {
+     setFolderId(e.target.value);
+   };
 
-  const handleSubmit = () => {
-    axios.get(`http://localhost:3000/getContactDetails?folderId=${folderId}`)
-      .then(response => {
-        console.log(response.data.contacts);
-        setContacts(response.data.contacts)
-      })
-      .catch(error => {
-        console.error('There was an error!', error);
-      });
-  };
+   const handleSubmit = () => {
+     axios.get(`http://localhost:3000/getContactDetails?folderId=${folderId}`)
+       .then(response => {
+  
+         setFolderContacts(response.data.contacts)
+       })
+       .catch(error => {
+         console.error('There was an error!', error);
+       });
+   };
 
-  const handleContactSelect = (contactId) => {
-    setSelectedContacts(prevSelected => 
-      prevSelected.includes(contactId)
-        ? prevSelected.filter(id => id !== contactId)
-        : [...prevSelected, contactId]
-    );
+   const handleContactSelect = (contactId) => {
+     setSelectedContacts(prevSelected => 
+       prevSelected.includes(contactId)
+         ? prevSelected.filter(id => id !== contactId)
+         : [...prevSelected, contactId]
+     );
     
-  };
+   };
 
-  const handleSelectAllContacts = () => {
-    if (selectAll) {
-      setSelectedContacts([]);
-    } else {
-      const allContactIds = contacts.map(contact => contact.id);
-      setSelectedContacts(allContactIds);
-    }
-    setSelectAll(prevSelectAll => !prevSelectAll);
-  };
+   const handleSelectAllContacts = () => {
+     if (selectAll) {
+       setSelectedContacts([]);
+     } else {
+       const allContactIds = FolderContact.map(contact => contact.id);
+       setSelectedContacts(allContactIds);
+     }
+     setSelectAll(prevSelectAll => !prevSelectAll);
+   };
 
-  const handleSubmitSelectedContacts = () => {
+   const handleSubmitSelectedContacts = () => {
     
-    const selectedEmails = contacts
-      .filter(contact => selectedContacts.includes(contact.id))
-      .map(contact => contact.email);
-      console.log(selectedEmails)
+     const selectedEmails = FolderContacts
+     .filter(contact => selectedContacts.includes(contact.id))
+       .map(contact => contact.email);
+       console.log(selectedEmails)
 
-    axios.post('http://localhost:3000/submitEmails', { emails: selectedEmails })
-      .then(response => {
-        console.log('Emails submitted successfully:', response.data);
-      })
-      .catch(error => {
-        console.error('There was an error submitting the emails!', error);
-      });
-  };
+     axios.post('http://localhost:3000/submitEmails', { emails: selectedEmails })
+       .then(response => {
+         console.log('Emails submitted successfully:', response.data);
+       })
+       .catch(error => {
+         console.error('There was an error submitting the emails!', error);
+       });
+   };
   
 
   return (
@@ -77,7 +78,7 @@ function ContactFolders() {
           Search
         </button>
       </div>
-      {contacts.length > 0 && (
+      {FolderContacts.length > 0 && (
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white border rounded-lg overflow-hidden">
             <thead className="bg-indigo-600 text-white">
@@ -96,7 +97,7 @@ function ContactFolders() {
               </tr>
             </thead>
             <tbody>
-              {contacts.map((contact, id) => (
+              {FolderContacts.map((contact, id) => (
                 <tr key={id} className="border-t">
                   <td className="px-4 py-2">
                     <input

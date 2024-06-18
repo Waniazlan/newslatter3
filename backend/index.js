@@ -96,17 +96,18 @@ app.get('/posts', async (req, res) => {
 
 //..................................................................................
 app.post('/send-email', async (req, res) => {
-  const { sender,recipientEmails ,htmlContent,emailSubject} = req.body;
+  const { sender,recipientEmails ,htmlContent,emailSubject,selectedEmails} = req.body;
 
   
   let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
   let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
- 
-
+ console.log(recipientEmails)
+ const emailObject = selectedEmails.map(email => ({ "email": email }));
+ console.log(emailObject)
   sendSmtpEmail.subject = emailSubject;
   sendSmtpEmail.htmlContent = htmlContent;
   sendSmtpEmail.sender = { email: sender };
-  sendSmtpEmail.to =recipientEmails;
+  sendSmtpEmail.to =emailObject.concat(recipientEmails);;
   try {
   
     apiInstance.sendTransacEmail(sendSmtpEmail).then(function (data) {
