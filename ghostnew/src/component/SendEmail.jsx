@@ -1,17 +1,27 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import Select from 'react-select';
+import { FiMail, FiList, FiChevronDown } from 'react-icons/fi';
+import ContactFolders from './ContactFolder'
+import { PostsContext } from '../component2/PostContext';
+
+
 
 const SendEmailForm = () => {
-    const [recipient, setRecipient] = useState('');
-    const [sender, setSender] = useState('');
+    const [senders, setSenders] = useState([]);
     const [postId, setPostId] = useState('');
     const [post, setPost] = useState(null);
     const [emailSubject, setEmailSubject] = useState('');
     const [contacts, setContacts] = useState([]);
     const [displayedContacts, setDisplayedContacts] = useState([]);
     const [selectedRecipients, setSelectedRecipients] = useState([]);
+    const [selectedSender,setSelectedSender] = useState('')
+    
+    const [folderId, setFolderId] = useState('');
+    const [FolderContacts,setFolderContacts] = useState([])
+    const [selectedContacts, setSelectedContacts] = useState([]);
+    const [selectAll, setSelectAll] = useState(false)
   
    
 
@@ -30,7 +40,7 @@ const SendEmailForm = () => {
             fetchPost();
         }
     }, [postId]);
-
+   //send email
     const sendEmail = async (post) => {
         if (!post) {
             alert('No post to send email for.');
@@ -123,11 +133,10 @@ const SendEmailForm = () => {
         try {
             const response = await axios.post('http://localhost:3000/send-email', {
               recipientEmails,
-                sender,
                 htmlContent,
-                emailSubject
+                emailSubject,
+                sender: selectedSender.value
                 
-
             });
 
             if (response.data.success) {
@@ -141,11 +150,13 @@ const SendEmailForm = () => {
         }
     };
 
+    //handle submit for the form
     const handleSubmit = async (e) => {
         e.preventDefault();
         sendEmail(post);
     };
 
+    //gett all the contact
     useEffect(() => {
         async function fetchContacts() {
           try {
@@ -159,116 +170,196 @@ const SendEmailForm = () => {
     
         fetchContacts();
       }, []);
-      
-      
-      const handleRecipientChange = (selectedOptions) => {
-        setSelectedRecipients(selectedOptions);
+    
+      //get all the sender
+    useEffect(() =>{
+        async function fetchSender(){
+            try {
+                const response = await axios.get('http://localhost:3000/getsender')
+                setSenders(response.data.senders)   
+                
+            } catch (error) {
+                console.error("Error fetching sender:", error.message);
+            }
+        }
+        fetchSender()
+    },[])
 
-    };
+        const handleRecipientChange = (selectedOptions) => {
+                setSelectedRecipients(selectedOptions);
+            };
 
-
+        //show only 5 contact, when scroll it will show more
          const handleInputChange = (inputValue) => {
-            if (inputValue) {
-               
+            if (inputValue) {             
                 const filteredOptions = contacts.filter(contact =>
                     contact.email && contact.email.toLowerCase().includes(inputValue.toLowerCase())
                 );
                 setDisplayedContacts(filteredOptions);
-            } else {
-                
+            } else {               
                 setDisplayedContacts(contacts.slice(0, 5));
             }
         };
-        
-        const loadMoreContacts = () => {
-         
+        //to load more all the contact
+        const loadMoreContacts = () => {      
             setDisplayedContacts(contacts); 
         };
-
+       
         const recipientEmails = selectedRecipients.map(recipient => ({
             email: recipient.label
+           
         }));
 
+        const handleSenderChange = selectedOption => {
+            setSelectedSender(selectedOption);
+           
+        };
+       
+
+        //....folder.......
+
+        const handleSubmitFolders = () => {
+            axios.get(`http://localhost:3000/getContactDetails?folderId=${folderId}`)
+              .then(response => {
+                console.log(response.data.contacts);
+                setContacts(response.data.contacts)
+              })
+              .catch(error => {
+                console.error('There was an error!', error);
+              });
+          };
+
+          const handleContactSelect = (contactId) => {
+            setSelectedContacts(prevSelected => 
+              prevSelected.includes(contactId)
+                ? prevSelected.filter(id => id !== contactId)
+                : [...prevSelected, contactId]
+            );
+          };
+        
+          const handleSelectAllContacts = () => {
+            if (selectAll) {
+              setSelectedContacts([]);
+            } else {
+              const allContactIds = contacts.map(contact => contact.id);
+              setSelectedContacts(allContactIds);
+            }
+            setSelectAll(prevSelectAll => !prevSelectAll);
+          };
+        
+          const handleSubmitSelectedContacts = () => {
+            
+            const selectedEmails = contacts
+              .filter(contact => selectedContacts.includes(contact.id))
+              .map(contact => contact.email);
+              console.log(selectedEmails)
+        
+            axios.post('http://localhost:3000/submitEmails', { emails: selectedEmails })
+              .then(response => {
+                console.log('Emails submitted successfully:', response.data);
+              })
+              .catch(error => {
+                console.error('There was an error submitting the emails!', error);
+              });
+          };
+          
+        
+
+    
        
     return (
     
-  <div className="container mx-auto my-5 bg-slate-400 rounded-md py-6 px-5">
+  <div className="container mx-auto my-5 rounded-md py-6 px-5">
   <div className='flex flex-row'>
          
     <div className="w-full lg:w-1/2 mx-2 mb-4">
-        <form onSubmit={handleSubmit} className="bg-white shadow-md max-w-lg rounded px-8 pt-6 pb-8 mb-4">
-        {/* <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="recipient">
-            Recipient Email:
-            </label>
-            <input
-            type="email"
-            id="recipient"
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            value={recipient}
-            onChange={(e) => setRecipient(e.target.value)}
-            required
-            />
-        </div> */}
-        <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="sender">
-            Sender Email:
-            </label>
-            <input
-            type="email"
-            id="sender"
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            value={sender}
-            onChange={(e) => setSender(e.target.value)}
-            required
-            />
-        </div> 
+    <form onSubmit={handleSubmit} className=" shadow-xl max-w-xl rounded-3xl px-10 pt-8 pb-10 mb-8 mx-auto transform transition-all hover:shadow-2xl">
+            <div className='mb-3'>
+           
+            <Select
+                value={selectedSender}
+                onChange={handleSenderChange}
+                options={senders.map(sender => ({ value: sender.email, label:sender.email}))}
+                placeholder="Sender email..."
+                styles={{
+                    control: (provided) => ({
+                        ...provided,
+                        borderRadius: '0.75rem',
+                        padding: '0.2rem',
+                        borderColor: 'transparent',
+                        boxShadow: '0 0 0 2px #f3edf2',
+                        '&:hover': {
+                        boxShadow: '0 0 0 2px #f3edf2',
+                        }
+                    })
+                    }}
+            />    
+            </div> 
      
-        <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="postId">
-            Ghost Post ID:
-            </label>
-            <input
-            type="text"
-            id="postId"
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            value={postId}
-            onChange={(e) => setPostId(e.target.value)}
-            required
-            />
-        </div>
-        <div className="mb-4">
-                    <label htmlFor="emailSubject" className="block text-gray-700 text-sm font-bold mb-2">
-                        Email Subject:
+            <div className="relative mb-4">
+                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                        <FiMail />
+                    </span>
+                    <input
+                    type="text"
+                    id="emailSubject"
+                    className="shadow-md appearance-none border border-transparent rounded-lg w-full py-3 pl-10 px-4 text-gray-800 leading-tight focus:outline-none focus:ring-2 focus:ring-[#f3edf2] focus:shadow-outline transition duration-200"
+                    value={emailSubject}
+                    onChange={(e) => setEmailSubject(e.target.value)}
+                    placeholder='Email subject'
+                    required
+                    />
+            </div>
+            <div className=" relative mb-4">
+                    <label className="block text-[#513e4e] text-sm font-bold mb-2" htmlFor="postId">
+                    Ghost post ID
                     </label>
                     <input
-                        type="text"
-                        id="emailSubject"
-                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        value={emailSubject}
-                        onChange={(e) => setEmailSubject(e.target.value)}
-                        required
+                    type="text"
+                    id="postId"
+                    className="shadow-md appearance-none border border-transparent rounded-lg w-full py-3 pl-10 px-4 text-gray-800 leading-tight focus:outline-none focus:ring-2 focus:ring-[#f3edf2] focus:shadow-outline transition duration-200"
+                    value={postId}
+                    onChange={(e) => setPostId(e.target.value)}
+                    required
                     />
-        </div>
-        <Select
-               
+            </div>
+      
+            <Select
                 isMulti
                 options={displayedContacts.map(contact => ({ value: contact.id, label: contact.email }))}
                 value={selectedRecipients}
                 onChange={handleRecipientChange}
-                onMenuScrollToBottom={loadMoreContacts} // Load more contacts when user scrolls to bottom
-                onInputChange={handleInputChange} // Handle input change for search
+                onMenuScrollToBottom={loadMoreContacts} 
+                onInputChange={handleInputChange}
                 placeholder="Select recipient..."
-              
-        />
-        <button
-            type="submit"
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-        >
-            Send Email
-        </button>
-        {!post && postId && <div className="text-gray-600 mt-2">Loading post details...</div>}
-        </form>
+                className="mb-8"
+                styles={{
+                control: (provided) => ({
+                    ...provided,
+                    borderRadius: '0.75rem',
+                    padding: '0.2rem',
+                    borderColor: 'transparent',
+                    boxShadow: '0 0 0 2px #f3edf2',
+                    '&:hover': {
+                    boxShadow: '0 0 0 2px #f3edf2',
+                    }
+                })
+                }}
+            />
+     {/* <ContactFolders onClick={handleSubmitSelectedContacts}/> */}
+
+        
+      
+
+      <button
+        type="submit"
+        className="bg-[#513e4e] hover:bg-black text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:shadow-outline transition duration-200 transform hover:scale-105"
+      >
+        Send Email
+      </button>
+      
+      {!post && postId && <div className="text-white mt-4">Loading post details...</div>}
+    </form>
       </div>
 
         <div className="w-full lg:w-1/2 mx-2 mb-4" >
@@ -282,12 +373,10 @@ const SendEmailForm = () => {
                 ></div>
             </div>
             )}
-        </div>
+        </div> 
+       
       
   </div>
-              {selectedRecipients.map((recipient, index) => (
-                    <li key={index}>{recipient.label}</li>
-                ))}
 </div>
 
     );

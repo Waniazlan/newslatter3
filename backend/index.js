@@ -96,10 +96,8 @@ app.get('/posts', async (req, res) => {
 
 //..................................................................................
 app.post('/send-email', async (req, res) => {
-  const { recipientEmails, sender,htmlContent,emailSubject} = req.body;
+  const { sender,recipientEmails ,htmlContent,emailSubject} = req.body;
 
- 
-  console.log(recipientEmails)
   
   let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
   let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
@@ -122,6 +120,74 @@ app.post('/send-email', async (req, res) => {
   }
 });
 
+app.get('/getsender',(req,res) =>{
+  try {
+    let apiInstance = new SibApiV3Sdk.SendersApi();
+
+    let opts = { 
+      'ip': "175.139.0.0",
+      'domain': "imago.us"
+    };
+
+    apiInstance.getSenders(opts).then(function(data) {
+        res.json({ senders: data.senders || []});
+    }, function(error) {
+        console.error(error);
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+})
+
+app.get('/getFolder',(req,res) =>{
+  try {
+    let apiInstance = new SibApiV3Sdk.ContactsApi();
+
+    let limit = 50; 
+
+    let offset = 0; 
+
+    apiInstance.getFolders(limit, offset).then(function(data) {
+      res.json({ folders: data.folders || [] });
+    }, function(error) {
+      console.error(error);
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+})
+
+app.post('/postFolderId', (req, res) => {
+  const { folderId } = req.body;
+
+  if (!folderId) {
+      return res.status(400).json({ error: 'Folder ID is required' });
+  }
+
+  console.log('Received Folder ID:', folderId); 
+  res.json({ message: 'Folder ID posted successfully' });
+});
+
+app.get('/getContactDetails', async(req,res) =>{
+  const { folderId } = req.query;
+  let apiInstance = new SibApiV3Sdk.ContactsApi();
+
+  let listId = folderId;  
+  
+  let opts = {
+    'modifiedSince': new Date("2021-01-01T19:20:30+01:00"),
+    'limit': 50,
+    'offset': 0 
+  };
+
+  apiInstance.getContactsFromList(listId, opts).then((data) => {
+    res.json(data);
+  }).catch((error) => {
+    res.status(500).send(error);
+  });
+})
 
   app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
